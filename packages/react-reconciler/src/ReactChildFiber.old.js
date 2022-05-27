@@ -103,47 +103,6 @@ function coerceRef(
     typeof mixedRef !== 'function' &&
     typeof mixedRef !== 'object'
   ) {
-    if (__DEV__) {
-      // TODO: Clean this up once we turn on the string ref warning for
-      // everyone, because the strict mode case will no longer be relevant
-      if (
-        (returnFiber.mode & StrictLegacyMode || warnAboutStringRefs) &&
-        // We warn in ReactElement.js if owner and self are equal for string refs
-        // because these cannot be automatically converted to an arrow function
-        // using a codemod. Therefore, we don't have to warn about string refs again.
-        !(
-          element._owner &&
-          element._self &&
-          element._owner.stateNode !== element._self
-        )
-      ) {
-        const componentName =
-          getComponentNameFromFiber(returnFiber) || 'Component';
-        if (!didWarnAboutStringRefs[componentName]) {
-          if (warnAboutStringRefs) {
-            console.error(
-              'Component "%s" contains the string ref "%s". Support for string refs ' +
-                'will be removed in a future major release. We recommend using ' +
-                'useRef() or createRef() instead. ' +
-                'Learn more about using refs safely here: ' +
-                'https://reactjs.org/link/strict-mode-string-ref',
-              componentName,
-              mixedRef,
-            );
-          } else {
-            console.error(
-              'A string ref, "%s", has been found within a strict mode tree. ' +
-                'String refs are a source of potential bugs and should be avoided. ' +
-                'We recommend using useRef() or createRef() instead. ' +
-                'Learn more about using refs safely here: ' +
-                'https://reactjs.org/link/strict-mode-string-ref',
-              mixedRef,
-            );
-          }
-          didWarnAboutStringRefs[componentName] = true;
-        }
-      }
-    }
 
     if (element._owner) {
       const owner: ?Fiber = (element._owner: any);
@@ -172,9 +131,6 @@ function coerceRef(
       // Assigning this to a const so Flow knows it won't change in the closure
       const resolvedInst = inst;
 
-      if (__DEV__) {
-        checkPropStringCoercion(mixedRef, 'ref');
-      }
       const stringRef = '' + mixedRef;
       // Check if previous string ref matches new string ref
       if (
@@ -1153,10 +1109,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         } else {
           if (
             child.elementType === elementType ||
-            // Keep this check inline so it only runs on the false path:
-            (__DEV__
-              ? isCompatibleFamilyForHotReloading(child, element)
-              : false) ||
+            // Keep this check inline so it only runs on the false path:||
             // Lazy types should reconcile their resolved type.
             // We need to do this after the Hot Reloading check above,
             // because hot reloading has different semantics than prod because
@@ -1333,11 +1286,6 @@ function ChildReconciler(shouldTrackSideEffects) {
       );
     }
 
-    if (__DEV__) {
-      if (typeof newChild === 'function') {
-        warnOnFunctionType(returnFiber);
-      }
-    }
 
     // Remaining cases are all treated as empty.
     return deleteRemainingChildren(returnFiber, currentFirstChild);

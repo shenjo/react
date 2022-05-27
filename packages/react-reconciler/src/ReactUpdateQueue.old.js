@@ -465,10 +465,6 @@ export function processUpdateQueue<State>(
 
   hasForceUpdate = false;
 
-  if (__DEV__) {
-    currentlyProcessingQueue = queue.shared;
-  }
-
   let firstBaseUpdate = queue.firstBaseUpdate;
   let lastBaseUpdate = queue.lastBaseUpdate;
 
@@ -648,10 +644,6 @@ export function processUpdateQueue<State>(
     markSkippedUpdateLanes(newLanes);
     workInProgress.lanes = newLanes;
     workInProgress.memoizedState = newState;
-  }
-
-  if (__DEV__) {
-    currentlyProcessingQueue = null;
   }
 }
 

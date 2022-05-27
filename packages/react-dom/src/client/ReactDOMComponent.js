@@ -373,7 +373,6 @@ export function createElement(
   rootContainerElement: Element | Document | DocumentFragment,
   parentNamespace: string,
 ): Element {
-  let isCustomComponentTag;
 
   // We create tags in the namespace of their parent container, except HTML
   // tags get no namespace.
@@ -386,35 +385,11 @@ export function createElement(
     namespaceURI = getIntrinsicNamespace(type);
   }
   if (namespaceURI === HTML_NAMESPACE) {
-    if (__DEV__) {
-      isCustomComponentTag = isCustomComponent(type, props);
-      // Should this check be gated by parent namespace? Not sure we want to
-      // allow <SVG> or <mATH>.
-      if (!isCustomComponentTag && type !== type.toLowerCase()) {
-        console.error(
-          '<%s /> is using incorrect casing. ' +
-            'Use PascalCase for React components, ' +
-            'or lowercase for HTML elements.',
-          type,
-        );
-      }
-    }
 
     if (type === 'script') {
       // Create the script via .innerHTML so its "parser-inserted" flag is
       // set to true and it does not execute
       const div = ownerDocument.createElement('div');
-      if (__DEV__) {
-        if (enableTrustedTypesIntegration && !didWarnScriptTags) {
-          console.error(
-            'Encountered a script tag while rendering React component. ' +
-              'Scripts inside React components are never executed when rendering ' +
-              'on the client. Consider using template tag instead ' +
-              '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).',
-          );
-          didWarnScriptTags = true;
-        }
-      }
       div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
       // This is guaranteed to yield a script element.
       const firstChild = ((div.firstChild: any): HTMLScriptElement);
@@ -450,25 +425,6 @@ export function createElement(
     }
   } else {
     domElement = ownerDocument.createElementNS(namespaceURI, type);
-  }
-
-  if (__DEV__) {
-    if (namespaceURI === HTML_NAMESPACE) {
-      if (
-        !isCustomComponentTag &&
-        Object.prototype.toString.call(domElement) ===
-          '[object HTMLUnknownElement]' &&
-        !hasOwnProperty.call(warnedUnknownTags, type)
-      ) {
-        warnedUnknownTags[type] = true;
-        console.error(
-          'The tag <%s> is unrecognized in this browser. ' +
-            'If you meant to render a React component, start its name with ' +
-            'an uppercase letter.',
-          type,
-        );
-      }
-    }
   }
 
   return domElement;
@@ -615,10 +571,6 @@ export function diffProperties(
   nextRawProps: Object,
   rootContainerElement: Element | Document | DocumentFragment,
 ): null | Array<mixed> {
-  if (__DEV__) {
-    validatePropertiesInDevelopment(tag, nextRawProps);
-  }
-
   let updatePayload: null | Array<any> = null;
 
   let lastProps: Object;
@@ -651,8 +603,6 @@ export function diffProperties(
       }
       break;
   }
-
-  assertValidProps(tag, nextProps);
 
   let propKey;
   let styleName;
@@ -708,13 +658,6 @@ export function diffProperties(
       continue;
     }
     if (propKey === STYLE) {
-      if (__DEV__) {
-        if (nextProp) {
-          // Freeze the next style object so that we can assume it won't be
-          // mutated. We have already warned for this in the past.
-          Object.freeze(nextProp);
-        }
-      }
       if (lastProp) {
         // Unset styles on `lastProp` but not on `nextProp`.
         for (styleName in lastProp) {
@@ -773,9 +716,6 @@ export function diffProperties(
     } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
       if (nextProp != null) {
         // We eagerly listen to this even though we haven't committed yet.
-        if (__DEV__ && typeof nextProp !== 'function') {
-          warnForInvalidEventListener(propKey, nextProp);
-        }
         if (propKey === 'onScroll') {
           listenToNonDelegatedEvent('scroll', domElement);
         }
@@ -793,9 +733,6 @@ export function diffProperties(
     }
   }
   if (styleUpdates) {
-    if (__DEV__) {
-      validateShorthandPropertyCollisionInDev(styleUpdates, nextProps[STYLE]);
-    }
     (updatePayload = updatePayload || []).push(STYLE, styleUpdates);
   }
   return updatePayload;

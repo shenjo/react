@@ -247,26 +247,8 @@ export function createInstance(
   hostContext: HostContext,
   internalInstanceHandle: Object,
 ): Instance {
-  let parentNamespace: string;
-  if (__DEV__) {
-    // TODO: take namespace into account when validating.
-    const hostContextDev = ((hostContext: any): HostContextDev);
-    validateDOMNesting(type, null, hostContextDev.ancestorInfo);
-    if (
-      typeof props.children === 'string' ||
-      typeof props.children === 'number'
-    ) {
-      const string = '' + props.children;
-      const ownAncestorInfo = updatedAncestorInfo(
-        hostContextDev.ancestorInfo,
-        type,
-      );
-      validateDOMNesting(null, string, ownAncestorInfo);
-    }
-    parentNamespace = hostContextDev.namespace;
-  } else {
-    parentNamespace = ((hostContext: any): HostContextProd);
-  }
+  const parentNamespace: string = ((hostContext: any): HostContextProd);
+
   const domElement: Instance = createElement(
     type,
     props,
@@ -314,21 +296,6 @@ export function prepareUpdate(
   rootContainerInstance: Container,
   hostContext: HostContext,
 ): null | Array<mixed> {
-  if (__DEV__) {
-    const hostContextDev = ((hostContext: any): HostContextDev);
-    if (
-      typeof newProps.children !== typeof oldProps.children &&
-      (typeof newProps.children === 'string' ||
-        typeof newProps.children === 'number')
-    ) {
-      const string = '' + newProps.children;
-      const ownAncestorInfo = updatedAncestorInfo(
-        hostContextDev.ancestorInfo,
-        type,
-      );
-      validateDOMNesting(null, string, ownAncestorInfo);
-    }
-  }
   return diffProperties(
     domElement,
     type,

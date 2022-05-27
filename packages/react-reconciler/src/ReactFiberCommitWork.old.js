@@ -529,25 +529,8 @@ function commitHookEffectListUnmount(
             }
           }
 
-          if (__DEV__) {
-            if ((flags & HookInsertion) !== NoHookEffect) {
-              setIsRunningInsertionEffect(true);
-            }
-          }
           safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
-          if (__DEV__) {
-            if ((flags & HookInsertion) !== NoHookEffect) {
-              setIsRunningInsertionEffect(false);
-            }
-          }
 
-          if (enableSchedulingProfiler) {
-            if ((flags & HookPassive) !== NoHookEffect) {
-              markComponentPassiveEffectUnmountStopped();
-            } else if ((flags & HookLayout) !== NoHookEffect) {
-              markComponentLayoutEffectUnmountStopped();
-            }
-          }
         }
       }
       effect = effect.next;
@@ -563,80 +546,11 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
     let effect = firstEffect;
     do {
       if ((effect.tag & flags) === flags) {
-        if (enableSchedulingProfiler) {
-          if ((flags & HookPassive) !== NoHookEffect) {
-            markComponentPassiveEffectMountStarted(finishedWork);
-          } else if ((flags & HookLayout) !== NoHookEffect) {
-            markComponentLayoutEffectMountStarted(finishedWork);
-          }
-        }
 
         // Mount
         const create = effect.create;
-        if (__DEV__) {
-          if ((flags & HookInsertion) !== NoHookEffect) {
-            setIsRunningInsertionEffect(true);
-          }
-        }
         effect.destroy = create();
-        if (__DEV__) {
-          if ((flags & HookInsertion) !== NoHookEffect) {
-            setIsRunningInsertionEffect(false);
-          }
-        }
 
-        if (enableSchedulingProfiler) {
-          if ((flags & HookPassive) !== NoHookEffect) {
-            markComponentPassiveEffectMountStopped();
-          } else if ((flags & HookLayout) !== NoHookEffect) {
-            markComponentLayoutEffectMountStopped();
-          }
-        }
-
-        if (__DEV__) {
-          const destroy = effect.destroy;
-          if (destroy !== undefined && typeof destroy !== 'function') {
-            let hookName;
-            if ((effect.tag & HookLayout) !== NoFlags) {
-              hookName = 'useLayoutEffect';
-            } else if ((effect.tag & HookInsertion) !== NoFlags) {
-              hookName = 'useInsertionEffect';
-            } else {
-              hookName = 'useEffect';
-            }
-            let addendum;
-            if (destroy === null) {
-              addendum =
-                ' You returned null. If your effect does not require clean ' +
-                'up, return undefined (or nothing).';
-            } else if (typeof destroy.then === 'function') {
-              addendum =
-                '\n\nIt looks like you wrote ' +
-                hookName +
-                '(async () => ...) or returned a Promise. ' +
-                'Instead, write the async function inside your effect ' +
-                'and call it immediately:\n\n' +
-                hookName +
-                '(() => {\n' +
-                '  async function fetchData() {\n' +
-                '    // You can await here\n' +
-                '    const response = await MyAPI.getData(someId);\n' +
-                '    // ...\n' +
-                '  }\n' +
-                '  fetchData();\n' +
-                `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-                'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching';
-            } else {
-              addendum = ' You returned: ' + destroy;
-            }
-            console.error(
-              '%s must not return anything besides a function, ' +
-                'which is used for clean-up.%s',
-              hookName,
-              addendum,
-            );
-          }
-        }
       }
       effect = effect.next;
     } while (effect !== firstEffect);
